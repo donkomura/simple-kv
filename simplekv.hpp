@@ -2,7 +2,6 @@
 #include <libpmemobj++/container/array.hpp>
 #include <libpmemobj++/container/string.hpp>
 #include <libpmemobj++/container/vector.hpp>
-#include <libpmemobj++/container/concurrent_hash_map.hpp>
 #include <libpmemobj++/p.hpp>
 #include <libpmemobj++/pexceptions.hpp>
 #include <libpmemobj++/pool.hpp>
