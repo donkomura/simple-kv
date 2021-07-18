@@ -1,7 +1,7 @@
 CXX     := g++
 CFLAGS  := `pkg-config --cflags libpmemobj++`
 LDFLAGS := `pkg-config --libs libpmemobj++`
-FLAGS   := -O -Wall -g -std=c++11
+FLAGS   := -O -Wall -g -std=c++14
 RM      := rm
 
 .PHONY: all clean

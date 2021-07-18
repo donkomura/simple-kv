@@ -1,9 +1,7 @@
 #include <exception>
-#include <iostream>
-#include <libpmemobj++/persistent_ptr_base.hpp>
-#include <stdexcept>
 #include <string>
 
+#include <libpmemobj++/container/string.hpp>
 #include <libpmemobj++/make_persistent.hpp>
 #include <libpmemobj++/p.hpp>
 #include <libpmemobj++/pool.hpp>
@@ -11,7 +9,7 @@
 
 #include "simplekv.hpp"
 #define SIMPLE_KV_LEYOUT "simple-kv"
-using kv_type = simple_kv<int, 1024>;
+using kv_type = simple_kv<pmem::obj::string, 1024>;
 
 struct root {
 	pmem::obj::persistent_ptr<kv_type> kv;
@@ -28,8 +26,7 @@ usage(std::string diag)
 int
 main(int argc, char **argv)
 {
-	std::string path, op, key;
-	int value;
+	std::string path, op, key, value;
 
 	if (argc < 3) {
 		usage("simple-kv");
@@ -51,15 +48,19 @@ main(int argc, char **argv)
 			});
 		}
 
-		if (op == "get" && argc == 4)
-			std::cout << r->kv->get(key) << std::endl;
-		else if (op == "put" && argc == 5) {
-			value = atoi(argv[4]);
+		if (op == "get" && argc == 4) {
+			auto v = r->kv->get(key).data();
+			if (v == nullptr)
+				std::cout << "key=" << key << " is not found" << std::endl;
+			else
+				std::cout << v << std::endl;
+		} else if (op == "put" && argc == 5) {
+			value = argv[4];
 			r->kv->put(key, value);
 		} else if (op == "history" && argc == 4) {
 			auto v = r->kv->history(key);
 			for (const auto &e : v) {
-				std::cout << e << std::endl;
+				std::cout << e.data() << std::endl;
 			}
 		} else if (op == "remove" && argc == 4) {
 			r->kv->remove(key);

@@ -7,9 +7,10 @@
 #include <libpmemobj++/pool.hpp>
 #include <libpmemobj++/transaction.hpp>
 #include <libpmemobj++/utils.hpp>
-#include <stdexcept>
-#include <utility>
 
+#include <boost/type_index.hpp>
+
+/* Value type expected for basic type or pmem::obj container type */
 template <typename Value, std::size_t N>
 class simple_kv {
 private:
@@ -27,6 +28,7 @@ public:
 	get(const std::string &key) const
 	{
 		auto index = hash_type{}(key) % N;
+
 		return buckets[index].back().second;
 	}
 
@@ -42,11 +44,13 @@ public:
 		return res;
 	}
 
+	template <typename T>
 	void
-	put(const std::string &key, const Value &val)
+	put(const std::string &key, const T &val)
 	{
 		auto index = hash_type{}(key) % N;
 		auto pop = pmem::obj::pool_by_vptr(this);
+
 		pmem::obj::transaction::run(pop, [&] {
 			buckets[index].emplace_back(key, val);
 		});
