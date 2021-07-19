@@ -9,10 +9,11 @@
 
 #include "simplekv.hpp"
 #define SIMPLE_KV_LEYOUT "simple-kv"
-using kv_type = simple_kv<pmem::obj::string, 1024>;
+using runtime_kv_type = simple_kv_runtime<pmem::obj::string, 1024>;
+using pmem_kv_type = simple_kv_persistent<pmem::obj::string, 1024>;
 
 struct root {
-	pmem::obj::persistent_ptr<kv_type> kv;
+	pmem::obj::persistent_ptr<pmem_kv_type> kv;
 };
 
 void
@@ -44,26 +45,24 @@ main(int argc, char **argv)
 
 		if (r->kv == nullptr) {
 			pmem::obj::transaction::run(pop, [&]{
-				r->kv = pmem::obj::make_persistent<kv_type>();
+				r->kv = pmem::obj::make_persistent<pmem_kv_type>();
 			});
 		}
 
+		auto runtime_kv = runtime_kv_type(r->kv.get());
+
 		if (op == "get" && argc == 4) {
-			auto v = r->kv->get(key).data();
-			if (v == nullptr)
-				std::cout << "key=" << key << " is not found" << std::endl;
-			else
-				std::cout << v << std::endl;
+			std::cout << runtime_kv.get(key).data() << std::endl;
 		} else if (op == "put" && argc == 5) {
 			value = argv[4];
-			r->kv->put(key, value);
+			runtime_kv.put(key, value);
 		} else if (op == "history" && argc == 4) {
-			auto v = r->kv->history(key);
+			auto v = runtime_kv.history(key);
 			for (const auto &e : v) {
 				std::cout << e.data() << std::endl;
 			}
 		} else if (op == "remove" && argc == 4) {
-			r->kv->remove(key);
+			runtime_kv.remove(key);
 		} else {
 			usage("simple-kv");
 			pop.close();
